@@ -1,0 +1,55 @@
+{
+  "name": "digital_guide_client",
+  "version": "1.1.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron .",
+    "dist": "electron-builder --win"
+  },
+  "build": {
+    "productName": "Digital Guide Client",
+    "appId": "digital_guide_client.app",
+    "directories": {
+      "output": "build"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ]
+    },
+    "win": {
+      "icon": "lib/icon.ico",
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "extraResources": [
+      {
+        "from": "./setting.json",
+        "to": "../setting.json",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ]
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^6.0.4",
+    "electron-builder": "^21.2.0",
+    "electron-reload": "^1.4.0"
+  },
+  "dependencies": {
+    "is-port-reachable": "^3.0.0",
+    "vue": "^2.6.11",
+    "yarn": "^1.17.3"
+  }
+}

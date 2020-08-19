@@ -1,0 +1,21 @@
+directories:
+  output: build
+  buildResources: build
+productName: Digital Guide Client
+appId: digital_guide_client.app
+mac:
+  target:
+    - dmg
+win:
+  icon: lib/icon.ico
+  target:
+    - nsis
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+extraResources:
+  - from: ./setting.json
+    to: ../setting.json
+    filter:
+      - '**/*'
+electronVersion: 6.0.4

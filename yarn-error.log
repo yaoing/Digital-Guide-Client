@@ -1,0 +1,75 @@
+Arguments: 
+  c:\program files\nodejs\node.exe C:\Users\85381\AppData\Roaming\npm\node_modules\yarn\bin\yarn.js add electron-builder --save-dev
+
+PATH: 
+  C:\unsetup\cmder\bin;C:\unsetup\cmder\vendor\bin;C:\unsetup\cmder\vendor\conemu-maximus5\ConEmu\Scripts;C:\unsetup\cmder\vendor\conemu-maximus5;C:\unsetup\cmder\vendor\conemu-maximus5\ConEmu;C:\vnstudio;C:\vnstudio\Scripts;c:\vnstudio\helpers\%systemroot%\system32;c:\vnstudio\helpers\%systemroot%;c:\vnstudio\helpers\%systemroot%\system32\wbem;c:\vnstudio\helpers\%systemroot%\system32\windowspowershell\v1.0;c:\vnstudio\helpers\%systemroot%\system32\openssh;c:\program files\cmake\bin;c:\program files\git\cmd;c:\program files\nodejs;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\CMake\bin;C:\Program Files\Git\cmd;C:\Anaconda3;C:\Anaconda3\Library\mingw-w64\bin;C:\Anaconda3\Library\usr\bin;C:\Anaconda3\Library\bin;C:\Anaconda3\Scripts;C:\Users\85381\AppData\Local\Microsoft\WindowsApps;C:\Users\85381\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\85381\Desktop\codeblocks-17.12;C:\Users\85381\AppData\Roaming\npm;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw64\bin;c:\Program Files\Git\usr\bin;C:\unsetup\cmder
+
+Yarn version: 
+  1.16.0
+
+Node version: 
+  12.1.0
+
+Platform: 
+  win32 x64
+
+Trace: 
+  Error: https://registry.npm.taobao.org/image-size/download/image-size-0.7.4.tgz: Request failed "500 Internal Server Error"
+      at ResponseError.ExtendableBuiltin (C:\Users\85381\AppData\Roaming\npm\node_modules\yarn\lib\cli.js:696:66)
+      at new ResponseError (C:\Users\85381\AppData\Roaming\npm\node_modules\yarn\lib\cli.js:802:124)
+      at Request.<anonymous> (C:\Users\85381\AppData\Roaming\npm\node_modules\yarn\lib\cli.js:66161:16)
+      at Request.emit (events.js:196:13)
+      at Request.module.exports.Request.onRequestResponse (C:\Users\85381\AppData\Roaming\npm\node_modules\yarn\lib\cli.js:130467:10)
+      at ClientRequest.emit (events.js:201:15)
+      at HTTPParser.parserOnIncomingClient [as onIncoming] (_http_client.js:565:23)
+      at HTTPParser.parserOnHeadersComplete (_http_common.js:116:17)
+      at TLSSocket.socketOnData (_http_client.js:452:22)
+      at TLSSocket.emit (events.js:196:13)
+
+npm manifest: 
+  {
+    "name": "hello",
+    "version": "1.0.0",
+    "description": "",
+    "main": "app.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1",
+      "start": "electron .",
+      "dist": "electron-builder --win"
+    },
+    "build": {
+      "productName": "COCO Marker",
+      "appId": "marker.app",
+      "directories": {
+        "output": "build"
+      },
+      "mac": {
+        "target": [
+          "dmg"
+        ]
+      },
+      "win": {
+        "icon": "lib/icon.ico",
+        "target": [
+          "nsis"
+        ]
+      },
+      "nsis": {
+        "allowToChangeInstallationDirectory": true
+      }
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+      "electron": "^5.0.1",
+      "image-size": "^0.7.4",
+      "vue-lazyload": "^1.2.6"
+    }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile

@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="./lib/index.css">
+    <link rel="stylesheet" href="./lib/fonts/font.css">
+    <script src="./lib/vue.js"></script>
+    <script src="./lib/index.js"></script>
+    <script src="./lib/vue-resource@1.5.1.js"></script>
+    <script src="./lib/fabric.min.js"></script>
+    <style>
+        html,body{
+            height: 100%;
+            margin: 0 auto;
+            padding: 0
+        }
+        #app{
+            width: 100%;
+            height: 100%;
+        }
+        .avatar-uploader .el-upload {
+            border: 1px dashed #d9d9d9;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .avatar-uploader .el-upload:hover {
+            border-color: #409EFF;
+        }
+        .avatar-uploader-icon {
+            font-size: 28px;
+            color: #8c939d;
+            width: 150px;
+            height: 150px;
+            line-height: 150px;
+            text-align: center;
+        }
+        .avatar {
+            width: 150px;
+            height: 150px;
+            display: block;
+        }
+
+        .time {
+            font-size: 13px;
+            color: #999;
+        }
+        
+        .bottom {
+            margin-top: 13px;
+            line-height: 12px;
+        }
+
+        .button {
+            padding: 0;
+            float: right;
+        }
+
+        .image {
+            width: 100%;
+            display: block;
+        }
+
+        #canvas{
+            /* width: 600px;
+            height: 320px; */
+        }
+
+        .clearfix:before,
+        .clearfix:after {
+            display: table;
+            content: "";
+        }
+        
+        .clearfix:after {
+            clear: both
+        }
+        *::-webkit-scrollbar {
+            display: none;
+        }
+        .aside{
+            border-right: gainsboro 1px solid;
+            padding:0 10px;
+            overflow-y:hid;
+            padding-top:10px;
+            width: 170px !important;
+        }
+
+        .address {
+            border-top: 1px solid
+            #e5e5e5;
+            border-bottom: 1px solid
+            #e5e5e5;
+            padding: 11px 0 11px;
+}
+
+        #visvalizeLabelBox{
+            position: fixed;
+            top:90px;
+            /* left:250px; */
+            right:500px;
+            z-index: 1000;
+            /* padding:3px */
+        }
+        #introduce{
+            font-size: 20px;
+            overflow-y: scroll
+        }
+
+        #introduce  .el-row{
+            margin: 60px 50px;
+        }
+
+        #introduce .el-image{
+            /* border: #409EFF 2px solid */
+            box-shadow: 0 0 20px gray;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" style="position:fixed;left: 0">
+        <el-container style="height:100%">
+            <el-header style='line-height: 60px;font-size: 30px;background-color: #FAFAFA
+            ;'>
+
+                <el-menu :default-active="activeIndex" mode="horizontal"  @select="handleSelect"
+                style='width: 100%;height:60px;padding-left:210px; background-color: #FAFAFA
+                ;' text-color='#409EFF'>
+                <span style="color: #409EFF;
+                position: relative;left: -340px">景区导游系统</span>  
+
+                <el-menu-item index="1">主页</el-menu-item>
+
+                <el-menu-item index="2">关于</el-menu-item>
+
+                </el-menu>
+            </el-header>
+
+
+            <el-container style="height:100%" v-show='activeIndex==1'>
+                <el-aside :style="{'gHeight':gHeight-60 +'px'}" class="aside">
+                    <el-upload
+                    action='http://192.168.51.163:5000/'
+                    list-type="picture-card"
+                    :on-preview="handlePictureCardPreview" 
+                    :on-remove="handleRemove" 
+                    :on-success="handleSuccess"
+                    :on-progress="handleProgress"
+                     :auto-upload='true'>
+                    <i class="el-icon-plus"></i>
+                    </el-upload>
+                      <!-- @click='handleClick(event)' -->
+                      <el-dialog :visible.sync="dialogVisible">
+                        <img width="100%" :src="dialogImageUrl ? dialogImageUrl :imageUrl" alt="">
+                      </el-dialog>
+                      
+                </el-aside>
+
+                <el-main style="padding:0">
+                        <el-row style=''>
+                            <canvas id="canvas"></canvas>
+                            <el-popover id='visvalizeLabelBox' placement="top" title="" width="200" trigger="manual"
+                            v-model="visvalizeLabelBox"  @after-enter='autoFocus()'>
+                                <el-row>
+                                    <el-col :span="13">
+                                        <el-autocomplete class="inline-input" size='mini' ref="labelBox"  v-model="label" :fetch-suggestions="querySearch" placeholder="请输入标签"></el-autocomplete>
+<!--                                        fetch-suggestions 是一个返回输入建议的方法属性-->
+                                        </el-autocomplete>
+                                    </el-col>
+                                    <el-col :span="10" :offset='1'>
+                                            <el-row>
+                                                <el-button size="mini" type="primary" icon="el-icon-check" circle @click="addLabel"></el-button>
+                                                
+                                                <el-button size="mini" type="danger" icon="el-icon-delete" circle plain @click="delObject"></el-button>
+                                            </el-row>
+                                    </el-col>
+                                </el-row>
+                            </el-popover>
+
+
+
+                            <el-popover v-if="abstract"
+                                placement="top-start"
+                                width="400"
+                                trigger="manual"
+                                v-model="drawer"
+                                style="position: fixed;top:60px;left:200px;;z-index: 1000;min-width: 100px;">
+                                <p style="font-size: 20px;color: #409EFF">{{brandName}}</p>
+                                <div class="address">
+                                    <p style="font-size: 14px;line-height: 15px;margin-bottom: 5px;">介绍:<span style="padding-left:20px">{{abstract}}</span></p>
+                                    <p style="font-size: 14px;line-height: 15px;margin-bottom: 5px;"><span style="margin-right:25px;"><el-image src="./lib/icon/address.ico"></el-image></span><span>地址:{{address}}</span></p>
+                                    <p style="font-size: 14px;line-height: 15px;margin-bottom: 5px;"><span style="margin-right:20px;"><el-image src="./lib/icon/phone.ico"></el-image></span><span>电话:{{telephone}}</span></p>
+                                    <p style="font-size: 14px;line-height: 15px;margin-bottom: 5px;"><span style="margin-right:20px;"><el-image src="./lib/icon/clock.ico"></el-image></span><span>营业时间：{{business}}</span></p>
+                                </div>
+
+                                <div style="margin-top:5px">
+                                    <div v-for="(item,index) in photo" style="width:100px;float:left;margin-left:25px">
+                                        <el-image  :src="item" :preview-src-list="getSrcList(index)"></el-image>
+                                    </div>
+                                    <!--<el-button @click="showViewer=true">预览</el-button>
+                                    <el-image-viewer v-if="showViewer" :on-close="()=>{showViewer=flase}" :url-list="photo"></el-image-viewer>-->
+                                </div>
+                            </el-popover>
+
+
+                            <el-popover v-else
+                                placement="top-start"
+                                width="100"
+                                trigger="manual"
+                                v-model="drawer"
+                                style="position: fixed;top:60px;left:200px;z-index: 1000;">
+                                <p style="font-size: 20px;color:#3b5999">{{brandName}}</p>
+                            </el-popover>
+
+
+                        </el-row>              
+                </el-main>
+                <el-aside style="width: 270px;padding:10px 20px;border-left:silver solid 1px">
+                    <!-- <el-table ref="singleTable" highlight-current-row 
+                         :data="tableData"  height="100%" border style="width: 100%">
+                            <el-table-column prop="id" align='center' sortable label="ID" width="70">
+                            </el-table-column>
+                            <el-table-column prop="label" align='center' label="标注信息">
+                            </el-table-column>
+                        </el-table> -->
+
+                        
+                    <h3 v-if="top5!=null">数据库匹配结果 TOP5</h3>
+                    <el-row v-if="top5!=null" v-for='(row,index) in top5' :key='index' style="margin:10px 0">
+<!--v-for指令需要用到特殊的语法"item in items"，items是源数据数组，item是别名。<div v-for="(item,index) in items">  遍历items属性的时候，用别名item代指当前的数组元素(键值对) 再根据键值对的key(item.text)，得到当前的value   index用于输出数组的索引-->
+                        <el-col :span='12' >
+                            <el-image 
+                                style="width: 100%;height:50px"
+                                    :src="row.path" 
+                                :preview-src-list="[row.path]">
+                            </el-image>
+                        
+                        
+                        </el-col>
+
+                        <el-col :span='12' style="text-align: center;;line-height:50px" >
+                            <el-tag effect="dark" v-if='row.label!=null'  @click="initEditTop5(index)">
+                                {{row.label}}
+                            </el-tag>
+                            <el-button type="text" @click="initEditTop5(index)" v-else>
+                                在线编辑
+                            </el-button>
+                        </el-col>
+
+                    </el-row>
+                </el-aside>
+                
+            </el-container>
+            
+            <el-container id='introduce' style="width:100%;height:100%" v-show='activeIndex==2'>
+                <div>
+                    <el-row style="width: 100%">
+                        <el-col :span='14' >
+                            <el-image src="./lib/images/Snipaste_2019-08-29_16-56-45.jpg"></el-image>
+                        </el-col>
+                        <el-col :span='7' :offset='1'>
+                            数字导游 Web APP 结合了目标检测、语义分割等计算机视觉领域前沿算法，
+                            结合特征检索与匹配算法，实现了对景区内主要目标的检测与景点、招牌相关信息的反馈
+    
+                        </el-col>
+    
+                    </el-row>
+                    <el-divider></el-divider>
+                    <el-row style="width: 100%">
+                        <el-col :span='7' :offset='1'>
+                            <p>
+                                    可检测十余种常见物体、店铺招牌以及景点标志
+                            </p>
+                            <p>
+                                    通过语义分割技术使建筑物得到整体渲染
+
+                            </p>
+                        </el-col>
+                        <el-col :span='12' :offset='1'>
+                            <el-container>
+                            <div>
+                                <el-image src="./lib/images/Snipaste_2019-08-31_10-38-04.jpg"></el-image>
+                            </div>
+                            <el-divider direction='vertical'></el-divider>
+                            <div>
+                                 <el-image src="./lib/images/Snipaste_2019-08-31_10-39-23.jpg"></el-image>
+
+                            </div>
+                            </el-container>
+                            <el-container>
+                                <div>
+                                    <el-image  src="./lib/images/Snipaste_2019-08-31_10-38-52.jpg"></el-image>
+
+                                </div>
+                             </el-container>
+                               
+                        </el-col>
+                    </el-row>
+                    <el-divider></el-divider>
+
+                    <el-container style="padding:0 10%;;margin-bottom: 50px">
+                        <div>
+                                <p style="text-align: center;font-size: 22px">景点招牌支持在线编辑哦！</p>
+                            <el-image  src="./lib/images/Snipaste_2019-08-31_11-30-23.jpg"></el-image>
+                            <el-divider>快来一起完善景点信息吧~</el-divider>
+                            <el-image  src="./lib/images/Snipaste_2019-08-31_11-32-22.jpg"></el-image>
+                        </div>
+                    </el-container>
+                                   
+                </div>
+            </el-container>
+        </el-container>
+ 
+    </div>
+</body>
+<script>
+    vm = new Vue({
+        el:'#app',
+        data:{
+            gWidth: window.innerWidth,
+            gHeight: window.innerHeight,
+
+            dialogImageUrl: '',
+            dialogVisible: false,
+            flag:true,
+            label:'',
+            imageUrl:'',
+            imageName:'',
+            loading:false,
+            fileList:[],
+            activeIndex: '1',
+            //canvas
+            canvasMaxWidth:1100,
+            canvasMaxHeight:700,
+            scaleSize:1,
+            //showViewer:flase,
+            dialogMasgVisible:false,
+
+            colormap:['#007ee5','#FFFC00','#410093','#3aaf85',
+                    ,'#b92b27','#f57d00','#3b5999','#e4405f'
+                    ,'#21759b','#25D366','#1ab7ea','#131418',
+                    '#00c300','#da552f','#4c75a3','#55acee',
+                    '#498205','#5D5A58'],
+            
+            eng_cat:['car','bicycle','motorcycle','bus','truck'],
+
+            visvalizeLabelBox:false,
+            categories: [
+                {
+                    "value": "",
+                }],
+            tableData:[],
+            labelID :1,
+            drawer:false,
+            abstract:null,
+            brandName:null,
+            address:null,
+            photo:[],
+            business:null,
+            telephone:null,
+            top5 : null,
+
+            server_path:'',
+        },
+        methods: {
+            handleRemove(file, fileList) {
+                this.flag = false
+            },
+            handlePictureCardPreview(file) {
+                this.dialogImageUrl = file.url;
+                this.dialogVisible = true;
+            },
+            handleSuccess(response, file, fileList) {
+                this.loading = false
+                this.updateBackImg(response)
+            },
+            handleProgress(event, file, fileList){
+                this.imageUrl = URL.createObjectURL(file.raw)
+                this.imageName = file.name
+                this.loading = true
+                this.fileList = fileList
+                //console.log(this.fileList)
+                this.flag = true
+                
+            },
+            handleClick(event){
+                console.log(event.url)
+                this.imageUrl = event.url
+                this.imageName = event.name
+                console.log(this.imageUrl)
+            },
+            handleSelect(key, keyPath) {
+                this.activeIndex = key.toString()
+            },
+
+
+            getSrcList(index){    //ptoto array
+                return this.photo.slice(index).concat(this.photo.slice(0,index))
+            },
+
+            updateBackImg:function(data) {
+                console.log(data)
+                console.log("hello g")
+                canvas.clear()
+                this.tableData = []
+                this.labelID = 1
+                this.brandName = null
+                this.abstract = null
+                this.address = null
+                this.telephone = null
+                this.photo = []
+                this.top5 = null
+                this.drawer = false
+                fabric.Image.fromURL(this.imageUrl, (img)=> {     //加载画布背景图片
+                    var width = img.width
+                    var height = img.height
+
+                    if (width > this.canvasMaxWidth){
+                        height =  (this.canvasMaxWidth / width)* height  
+                        width = this.canvasMaxWidth
+                    }
+
+                    if (height > this.canvasMaxHeight){
+                        width =  (this.canvasMaxHeight / height)* width  
+                        height = this.canvasMaxHeight
+                    }
+                    
+                    this.scaleSize = width/img.width
+                    
+                    canvas.setWidth(width)      //控制画布大小
+                    canvas.setHeight(height)
+                    canvas.setBackgroundImage(this.imageUrl, canvas.renderAll.bind(canvas),{
+                        scaleX:this.scaleSize,
+                        scaleY:this.scaleSize
+                        });
+                    
+
+                     //this.updateDirection(data.direction)
+                    this.updateBuildings(data)
+                    this.updateRoad(data)
+                    this.updateObjects(data)
+
+                    this.updateBrands(data)
+                    });
+                    
+                this.data = data
+
+            },
+            updateObjects:function(data){
+                data.detector.forEach((box,i)=>{
+                        point = box.points
+
+                        var category=null
+                        if (box.category =='person')
+                            category = '路人'
+                        else if (this.eng_cat.indexOf(box.category)>-1)
+                            category = '车辆'
+                           
+                        var rect = new fabric.Rect({
+                            left: point[0]*this.scaleSize,
+                            top: point[1]*this.scaleSize,
+                            fill: 'rgba(255,255,255 ,0.1)',
+                            strokeWidth:2,
+                            selectable:false,
+                            stroke:this.colormap[box.label],
+                            width: (point[2]-point[0])*this.scaleSize,
+                            height: (point[3]-point[1])*this.scaleSize,
+                            type:'detector',
+                            label:box.label,
+                            category: category==null ? box.category : category
+
+                        });
+                        canvas.add(rect)
+
+                    })
+            },
+            
+            updateLabel:function(left,top,label){    //招牌标签
+                canvas.add(new fabric.Text(label, { 
+                            left: left, 
+                            top: top,
+                            fontSize: 17,
+                            textBackgroundColor: 'rgba(100,149,237 ,1)',
+                            fill:'white',
+                            selectable:false,
+                            textAlign: 'center',
+                            fontFamily: "Microsoft YaHei",
+                            overline: true,
+                            }));
+            },
+            updateaAbstract:function(left,top,text){    //沒用上
+                abs = new fabric.Text(text, { 
+                            left: left, 
+                            top: top,
+                            fontSize: 15,
+                            textBackgroundColor: 'white',
+                            fill:'black',
+                            selectable:false,
+                            // textAlign: 'center',
+                            fontFamily: "Microsoft YaHei",
+                            overline: true,
+                            })
+                canvas.add(abs);
+                return abs
+            },
+            updateBrands:function(data){
+                
+                data.brands.forEach((dict,i)=>{
+                        console.log(data)
+                        console.log("Hello 1")
+
+                        point = dict.points
+                        label = dict.label
+                        row = dict.row
+                        type = dict.type
+                        top5 = dict.top5
+
+                        var rect = new fabric.Rect({
+                            left: point[0]*this.scaleSize,
+                            top: point[1]*this.scaleSize,
+                            fill: null,
+                            strokeWidth:3,   //举行框线条的镑值
+                            selectable:false,
+                            stroke:'rgba(100,149,237 ,1)',
+                            width: (point[2]-point[0])*this.scaleSize,   //矩形框的宽度
+                            height: (point[3]-point[1])*this.scaleSize,  //矩形框的高度
+                            row:row,
+                            label:label,
+                            focus:label==null ? true : false,
+                            abstract:dict.abstract,
+                            top5:top5,
+                            address:dict.address,
+                            photo:dict.photo,
+                            business:dict.business,
+                            telephone:dict.telephone,
+                        });
+
+                        if (label!=null){
+                            this.updateLabel(point[0]*this.scaleSize,
+                                point[3]*this.scaleSize,
+                                label
+                            )
+                            this.tableData.push({
+                                id:this.labelID++,
+                                label:label
+                            })
+                        }
+                        canvas.add(rect)
+
+                    })
+            },
+            
+            updateBuildings:function(data){
+
+                data.buildings.forEach((points)=>{
+                    data = []
+                    
+                    
+                    xs = []
+                    ys = []
+                    points.forEach((point)=>{
+                        // console.log(point[1]*this.scaleSize)
+                        // data.push({
+                        //     x:point[1],
+                        //     y:point[0]*this.scaleSize
+                        // }) 
+                        point.x *= this.scaleSize
+                        point.y *= this.scaleSize
+                        
+                        xs.push(point.x)
+                        ys.push(point.y)
+
+                    })
+                    minx = Math.min(...xs)
+                    miny = Math.min(...ys)
+                    maxx = Math.max(...xs)
+                    maxy = Math.max(...ys)
+                    
+                    centx = maxx-minx
+                    centy = maxy-miny
+
+                    data = []
+                    points.forEach((point)=>{
+                        data.push({
+                            x:point.x-centx,
+                            y:point.y - centy
+                        }) 
+
+                    })
+
+                     //console.log(data)
+                    var polyline = new fabric.Polyline(data, {
+                            fill: 'rgba(59,89,153 ,0.4)',
+                            // stroke: '#81C6FC',
+                            // strokeWidth: 3,
+                            left: minx,
+                            top: miny,
+                            hasBorders: false,
+                            hasControls: false,
+                            selectable:false,
+                            category:'建筑物'
+                        })
+                    
+                    canvas.add(polyline)
+                })
+            },
+            
+            updateBuildings:function(data){
+
+                data.buildings.forEach((points)=>{
+                    data = []
+                    
+                    
+                    xs = []
+                    ys = []
+                    points.forEach((point)=>{
+                        // console.log(point[1]*this.scaleSize)
+                        // data.push({
+                        //     x:point[1],
+                        //     y:point[0]*this.scaleSize
+                        // }) 
+                        point.x *= this.scaleSize
+                        point.y *= this.scaleSize
+                        
+                        xs.push(point.x)
+                        ys.push(point.y)
+
+                    })
+                    minx = Math.min(...xs)
+                    miny = Math.min(...ys)
+                    maxx = Math.max(...xs)
+                    maxy = Math.max(...ys)
+                    
+                    centx = maxx-minx
+                    centy = maxy-miny
+
+                    data = []
+                    points.forEach((point)=>{
+                        data.push({
+                            x:point.x-centx,
+                            y:point.y - centy
+                        }) 
+
+                    })
+
+                     //console.log(data)
+                    var polyline = new fabric.Polyline(data, {
+                            fill: 'rgba(59,89,153 ,0.4)',
+                            // stroke: '#81C6FC',
+                            // strokeWidth: 3,
+                            left: minx,
+                            top: miny,
+                            hasBorders: false,
+                            hasControls: false,
+                            selectable:false,
+                            category:'建筑物'
+                        })
+                    
+                    canvas.add(polyline)
+                })
+            },
+            updateRoad:function(data){
+
+                data.road.forEach((points)=>{
+                    data = []
+                    
+                    
+                    xs = []
+                    ys = []
+                    points.forEach((point)=>{
+                        // console.log(point[1]*this.scaleSize)
+                        // data.push({
+                        //     x:point[1],
+                        //     y:point[0]*this.scaleSize
+                        // }) 
+                        point.x *= this.scaleSize
+                        point.y *= this.scaleSize
+                        
+                        xs.push(point.x)
+                        ys.push(point.y)
+
+                    })
+                    minx = Math.min(...xs)
+                    miny = Math.min(...ys)
+                    maxx = Math.max(...xs)
+                    maxy = Math.max(...ys)
+                    
+                    centx = maxx-minx
+                    centy = maxy-miny
+
+                    data = []
+                    points.forEach((point)=>{
+                        data.push({
+                            x:point.x-centx,
+                            y:point.y - centy
+                        }) 
+
+                    })
+
+                    //console.log(data)
+                    var polyline = new fabric.Polyline(data, {
+                            fill: 'rgba(218,165,32 ,0.4)',
+                            // stroke: '#81C6FC',
+                            // strokeWidth: 3,
+                            left: minx,
+                            top: miny,
+                            hasBorders: false,
+                            hasControls: false,
+                            selectable:false,
+                            category:'道路'
+                        })
+                    
+                    canvas.add(polyline)
+                })
+                },
+
+            querySearch(queryString, cb) {
+                var categories = this.categories;
+                var cat = categories[0]
+                var results = queryString ? categories.filter(cat => cat.value.toLowerCase().indexOf(
+                    queryString.toLowerCase()) === 0) : categories;
+                // 调用 callback 返回建议列表的数据   toLowerCase  将字符串中的大写英文转为小写字母  filter 返回满足()中条件的元素   =>箭头函数 cat为参数,后面的为函数体.箭头函数相当于匿名函数，并且简化了函数定义。箭头函数有两种格式，一种像上面的，只包含一个表达式，连{ ... }和return都省略掉了。还有一种可以包含多条语句，这时候就不能省略{ ... }和return：
+                cb(results); 
+            },
+            addLabel:function(){
+                
+                this.visvalizeLabelBox = false
+                this.categories.push({
+                    "value": this.label,
+                })
+                
+                if (this.index==null){
+                    this.$http.post('updateLabel/',{
+                    label:this.label,row:this.currentObj.row}).then(function(res){
+                    
+                        this.updateLabel(this.currentObj.left,
+                                    (this.currentObj.top+this.currentObj.height),
+                                    this.label
+                                )
+                        canvas.getObjects().forEach(obj =>{
+                            if(obj == this.currentObj){
+                                obj['focus'] = false
+                            }
+                        })
+
+                    // this.tableData.push({
+                    //     id:this.labelID++,
+                    //     label:this.label
+                    // })
+                    })
+                }else{
+                    index = this.index
+                    this.$http.post('updateLabel/',{
+                    label:this.label,row:this.top5[index].index}).then(function(res){
+
+                    this.top5[index].label = this.label
+                })
+                }
+                
+
+            },  
+
+            delObject:function(){
+                
+                this.visvalizeLabelBox = false
+                this.currentObj = null
+                this.label = null
+            }, 
+            autoFocus:function(){
+                this.$refs.labelBox.focus()
+            },
+
+
+            initEditTop5:function(index){
+                
+                this.index=index
+                this.visvalizeLabelBox=true
+            }, 
+            loadSettingFromJSON:function(){
+                if (fs.existsSync('./setting.json')) {
+                    var setting = JSON.parse(
+                        fs.readFileSync('./setting.json', 'utf-8'))
+                    this.server_path = setting.server_path
+                }
+            },
+        },
+        mounted(){
+
+            
+            canvas = new fabric.Canvas('canvas', {
+                preserveObjectStacking: true
+            })
+            
+            
+            this.loadSettingFromJSON()
+
+            Vue.http.options.root = this.server_path
+
+            canvas.on('mouse:down',(e)=>{
+                var obj = e.target
+
+                if (obj.row != null && obj.focus){
+                    this.currentObj= obj
+                    this.index = null
+                    this.visvalizeLabelBox = true
+
+                }
+
+                if (obj.row != null){
+                    this.top5 = obj.top5
+                    
+                }
+
+            })
+
+            canvas.on('mouse:over',(e)=>{
+                var obj = e.target
+                if (obj.abstract!=undefined){
+                    if (typeof(obj.label)== "string")
+                        this.brandName = obj.label
+                        this.abstract = obj.abstract
+                        this.address = obj.address
+                        this.photo = obj.photo.split("*")
+                        this.business = obj.business
+                        this.telephone = obj.telephone
+                        this.drawer = true
+                }else if (obj.category){
+                    this.brandName = obj.category
+                    this.abstract =null
+                    this.address = null
+                    this.photo = null
+                    this.business = null
+                    this.telephone = null
+                    this.drawer = true
+                }
+
+            })
+
+            canvas.on('mouse:out',(e)=>{
+                 //var obj = e.target
+                // if (obj.type!=undefined){
+                    // canvas.remove(this.currentAbs)
+                    //this.brandName = null
+                    //this.abstract =null
+                    //this.address = null
+                    //this.photo = null
+                    //this.business = null
+                    //this.telephone = null
+                    //this.drawer = false
+
+                    var obj = e.target
+                    if(obj.abstract==undefined){
+                        this.brandName = null
+                        this.drawer = false
+                    }
+
+
+                // }
+
+            })
+
+            Vue.http.options.emulateJSON = true
+        }
+
+    })
+</script>
+</html>

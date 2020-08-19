@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数字导游系统</title>
+    <script src="./lib/vue.js"></script>
+    <style>
+        html,body{
+            height: 100%;
+            margin: 0 auto;
+            background-color: white;
+        }
+    </style>
+</head>
+<body id='body'>
+    <div id="app" style="width: 100%;height: 100%;">
+        <iframe id='frameBody' :src="get_url()" width="100%" height="98%" frameBorder='0'></iframe>
+    </div>
+    
+</body>
+
+
+<script>
+    const fs = require('fs');
+    const isPortReachable = require('is-port-reachable');
+
+    new Vue({
+        el:'#app',
+        data:{
+            ip:null,
+            port:null
+        },
+        
+        methods:{
+            get_url:function(){
+                return 'http://' + this.ip + ':' +this.port
+            }
+        },
+
+        mounted(){
+            var ip,port,str;
+
+            if (fs.existsSync('./setting.json')) {
+                var setting = JSON.parse(
+                    fs.readFileSync('./setting.json', 'utf-8'))
+                this.ip = setting.server_ip
+                this.port = setting.server_port
+            }
+
+            (async () => {
+                var res = await isPortReachable(parseInt(this.port), {host: this.ip});
+                if(!res){
+                    window.alert('请求失败，请确保服务或网络正常开启');
+        
+                }
+                    
+            //=> true
+        })();
+        }
+    })
+
+    
+    
+
+
+</script>
+</html>
